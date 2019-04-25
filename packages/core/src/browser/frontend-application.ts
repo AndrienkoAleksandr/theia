@@ -115,7 +115,9 @@ export class FrontendApplication {
      * - reveal the application shell if it was hidden by a startup indicator
      */
     async start(): Promise<void> {
+        console.log('we are going to start!!!');
         await this.startContributions();
+        console.log('let`s try to get host');
         this.stateService.state = 'started_contributions';
 
         const host = await this.getHost();
@@ -295,20 +297,32 @@ export class FrontendApplication {
          * - decouple commands & menus
          * - consider treat commands, keybindings and menus as frontend application contributions
          */
-        this.commands.onStart();
-        await this.keybindings.onStart();
-        this.menus.onStart();
-        for (const contribution of this.contributions.getContributions()) {
-            if (contribution.onStart) {
-                try {
-                    await this.measure(contribution.constructor.name + '.onStart',
-                        () => contribution.onStart!(this)
-                    );
-                } catch (error) {
-                    this.logger.error('Could not start contribution', error);
+        try {
+            this.commands.onStart();
+
+            await this.keybindings.onStart();
+
+            this.menus.onStart();
+        } catch (error) {
+            console.log('error ', error);
+        }
+
+        try {
+            for (const contribution of this.contributions.getContributions()) {
+                if (contribution.onStart) {
+                    try {
+                        await this.measure(contribution.constructor.name + '.onStart',
+                            () => contribution.onStart!(this)
+                        );
+                    } catch (error) {
+                        this.logger.error('Could not start contribution', error);
+                    }
                 }
             }
+        } catch (er) {
+            console.log('Go on ', er);
         }
+        console.log('next');
     }
 
     /**
